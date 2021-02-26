@@ -3,21 +3,21 @@
 #include <algorithm>
 #include <vector_erase_move_lastelement/vector_swap_erase.h>
 
-void DirtySender::AddDirtyReveiver(DirtyReceiver* reciever)
+void DirtySender::AddDirtyReceiver(DirtyReceiver* reciever)
 {
 	this->mDirtyReceivers.push_back(reciever);
 }
 
-void DirtySender::RemoveDirtyReveiver(DirtyReceiver* reciever)
+void DirtySender::RemoveDirtyReceiver(DirtyReceiver* reciever)
 {
-	std::vector<DirtyReceiver>::iterator targetIter = std::find(this->mDirtyReceivers.begin(), this->mDirtyReceivers.end(), reciever);
+	std::vector<DirtyReceiver*>::iterator targetIter = std::find(this->mDirtyReceivers.begin(), this->mDirtyReceivers.end(), reciever);
 	std::vector_swap_erase(this->mDirtyReceivers, targetIter);
 }
 
-void DirtySender::SendDirty()
+void DirtySender::NotifyDirty()
 {
 	for (auto& receiver : this->mDirtyReceivers)
 	{
-		receiver->mIsDirty = true;
+		receiver->SetDirty();
 	}
 }
