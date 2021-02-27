@@ -21,14 +21,27 @@ LocalDirty::~LocalDirty()
 	}
 }
 
+LocalDirty& LocalDirty::operator=(bool isDirty)
+{
+	this->bmIsDirty = isDirty;
+	return *this;
+}
+
+void LocalDirty::SetDirty(bool isDirty /*= true*/)
+{
+	this->bmIsDirty = isDirty;
+}
+
 bool LocalDirty::GetIsDirty(bool clearDirty)
 {
-	bool currentDirtyVariable = this->bmIsDirty;
-
 	if (clearDirty == true)
 	{
+		bool currentDirtyVariable = this->bmIsDirty;
 		this->bmIsDirty = false;
+		return currentDirtyVariable;
 	}
-
-	return currentDirtyVariable;
+	else
+	{
+		return this->bmIsDirty;
+	}
 }

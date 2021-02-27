@@ -1,5 +1,6 @@
 #include "DirtyReceiver.h"
 
+#include <utility>
 #include <cassert>
 #include "DirtySender.h"
 #include <vector_erase_move_lastelement/vector_swap_erase.h>
@@ -9,6 +10,23 @@
 DirtyReceiver::DirtyReceiver(DirtySender* sender)
 {
 	this->SetDirtySender(sender);
+}
+
+DirtyReceiver::DirtyReceiver(DirtyReceiver&& dirtyReceiver) noexcept
+{
+	this->mSender = dirtyReceiver.mSender;
+	this->mLocalIsDirtys = std::move(dirtyReceiver.mLocalIsDirtys);
+
+	dirtyReceiver.mSender = nullptr;
+}
+
+DirtyReceiver& DirtyReceiver::operator=(DirtyReceiver&& dirtyReceiver) noexcept
+{
+	this->mSender = dirtyReceiver.mSender;
+	this->mLocalIsDirtys = std::move(dirtyReceiver.mLocalIsDirtys);
+
+	dirtyReceiver.mSender = nullptr;
+	return *this;
 }
 
 DirtyReceiver::~DirtyReceiver()

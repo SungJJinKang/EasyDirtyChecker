@@ -30,9 +30,9 @@ public:
 	DirtyReceiver() {}
 	DirtyReceiver(DirtySender* sender);
 	DirtyReceiver(const DirtyReceiver&) = default;
-	DirtyReceiver(DirtyReceiver&&) noexcept = default;
+	DirtyReceiver(DirtyReceiver&& dirtyReceiver) noexcept;
 	DirtyReceiver& operator=(const DirtyReceiver&) = default;
-	DirtyReceiver& operator=(DirtyReceiver&&) noexcept = default;
+	DirtyReceiver& operator=(DirtyReceiver&& dirtyReceiver) noexcept;
 	
 	//Important, when Receiver is destructed, remove this obejct from sender's Reciever list(vector)
 	~DirtyReceiver();

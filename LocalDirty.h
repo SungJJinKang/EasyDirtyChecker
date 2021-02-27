@@ -19,6 +19,9 @@ public:
 	LocalDirty& operator=(LocalDirty&&) noexcept = default;
 	~LocalDirty();
 
+	LocalDirty& operator=(bool isDirty);
+	void SetDirty(bool isDirty = true);
+
 	/// <summary>
 	/// Get IsDirty
 	/// </summary>
