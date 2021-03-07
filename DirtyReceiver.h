@@ -1,4 +1,5 @@
 #pragma once
+#include "DirtySender.h"
 
 class DirtySender;
 class DirtyReceiver
@@ -19,18 +20,49 @@ public:
 	DirtyReceiver& operator=(DirtyReceiver&& dirtyReceiver) noexcept;
 	~DirtyReceiver();
 
-	DirtyReceiver& operator=(bool isDirty);
-	void SetDirty(bool isDirty = true);
+	constexpr operator bool()
+	{
+		return this->bmIsDirty;
+	}
+
+	constexpr DirtyReceiver& operator=(bool isDirty)
+	{
+		this->bmIsDirty = isDirty;
+		return *this;
+	}
+
+	constexpr void SetDirty(bool isDirty = true)
+	{
+		this->bmIsDirty = isDirty;
+	}
 
 
-	void ClearDirtySender();
+	constexpr void ClearDirtySender()
+	{
+		if (this->mDirtySender != nullptr)
+		{
+			this->mDirtySender->RemoveDirtyReceiver(this);
+		}
+	}
 
 	/// <summary>
 	/// Get IsDirty
 	/// </summary>
 	/// <param name="clearDirty">Do Clear Dirty Variable???</param>
 	/// <returns></returns>
-	[[nodiscard]] bool GetIsDirty(bool clearDirty); // don't put default value to clearDirty argument
+	[[nodiscard]] constexpr bool GetIsDirty(bool clearDirty) // don't put default value to clearDirty argument
+	{
+		if (clearDirty == true)
+		{
+			bool currentDirtyVariable = this->bmIsDirty;
+			this->bmIsDirty = false;
+			return currentDirtyVariable;
+		}
+		else
+		{
+			return this->bmIsDirty;
+		}
+	}
 
 };
 

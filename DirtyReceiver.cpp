@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "DirtySender.h"
+
 DirtyReceiver::DirtyReceiver()
 	: bmIsDirty{ true }
 {
@@ -62,36 +62,3 @@ DirtyReceiver::~DirtyReceiver()
 	this->ClearDirtySender();
 }
 
-DirtyReceiver& DirtyReceiver::operator=(bool isDirty)
-{
-	this->bmIsDirty = isDirty;
-	return *this;
-}
-
-void DirtyReceiver::SetDirty(bool isDirty /*= true*/)
-{
-	this->bmIsDirty = isDirty;
-}
-
-
-void DirtyReceiver::ClearDirtySender()
-{
-	if (this->mDirtySender != nullptr)
-	{
-		this->mDirtySender->RemoveDirtyReceiver(this);
-	}
-}
-
-bool DirtyReceiver::GetIsDirty(bool clearDirty)
-{
-	if (clearDirty == true)
-	{
-		bool currentDirtyVariable = this->bmIsDirty;
-		this->bmIsDirty = false;
-		return currentDirtyVariable;
-	}
-	else
-	{
-		return this->bmIsDirty;
-	}
-}
