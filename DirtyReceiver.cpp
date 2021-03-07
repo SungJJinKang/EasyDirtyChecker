@@ -1,115 +1,97 @@
 #include "DirtyReceiver.h"
 
-#include <utility>
 #include <cassert>
+
 #include "DirtySender.h"
-#include <vector_erase_move_lastelement/vector_swap_erase.h>
-
-
-
-DirtyReceiver::DirtyReceiver(DirtySender* sender)
+DirtyReceiver::DirtyReceiver()
+	: bmIsDirty{ true }
 {
-	this->SetDirtySender(sender);
+
 }
 
-DirtyReceiver::DirtyReceiver(DirtyReceiver&& dirtyReceiver) noexcept
+DirtyReceiver::DirtyReceiver(bool initialDirty)
+	: bmIsDirty{ initialDirty }
 {
-	this->mSender = dirtyReceiver.mSender;
-	this->mLocalIsDirtys = std::move(dirtyReceiver.mLocalIsDirtys);
 
-	dirtyReceiver.mSender = nullptr;
+}
+
+DirtyReceiver::DirtyReceiver(const DirtyReceiver & dirtyReceiver)
+	: bmIsDirty{ dirtyReceiver.bmIsDirty }
+{
+	if (dirtyReceiver.mDirtySender != nullptr)
+	{
+		dirtyReceiver.mDirtySender->AddDirtyReceiver(this);
+	}
+}
+
+DirtyReceiver::DirtyReceiver(DirtyReceiver && dirtyReceiver) noexcept
+	: bmIsDirty{ dirtyReceiver.bmIsDirty }
+{
+	if (dirtyReceiver.mDirtySender != nullptr)
+	{
+		dirtyReceiver.mDirtySender->AddDirtyReceiver(this);
+		dirtyReceiver.mDirtySender->RemoveDirtyReceiver(&dirtyReceiver);
+	}
+}
+
+DirtyReceiver& DirtyReceiver::operator=(const DirtyReceiver& dirtyReceiver)
+{
+	this->bmIsDirty = dirtyReceiver.bmIsDirty;
+	if (dirtyReceiver.mDirtySender != nullptr)
+	{
+		dirtyReceiver.mDirtySender->AddDirtyReceiver(this);
+	}
+
+	return *this;
 }
 
 DirtyReceiver& DirtyReceiver::operator=(DirtyReceiver&& dirtyReceiver) noexcept
 {
-	this->mSender = dirtyReceiver.mSender;
-	this->mLocalIsDirtys = std::move(dirtyReceiver.mLocalIsDirtys);
+	this->bmIsDirty = dirtyReceiver.bmIsDirty;
+	if (dirtyReceiver.mDirtySender != nullptr)
+	{
+		dirtyReceiver.mDirtySender->AddDirtyReceiver(this);
+		dirtyReceiver.mDirtySender->RemoveDirtyReceiver(&dirtyReceiver);
+	}
 
-	dirtyReceiver.mSender = nullptr;
 	return *this;
 }
 
 DirtyReceiver::~DirtyReceiver()
 {
-	this->mSender->RemoveDirtyReceiver(this);
+	this->ClearDirtySender();
+}
 
-	for (auto& localDirty : this->mLocalIsDirtys)
+DirtyReceiver& DirtyReceiver::operator=(bool isDirty)
+{
+	this->bmIsDirty = isDirty;
+	return *this;
+}
+
+void DirtyReceiver::SetDirty(bool isDirty /*= true*/)
+{
+	this->bmIsDirty = isDirty;
+}
+
+
+void DirtyReceiver::ClearDirtySender()
+{
+	if (this->mDirtySender != nullptr)
 	{
-		localDirty->mOwnerDirtyReceiver = nullptr;
+		this->mDirtySender->RemoveDirtyReceiver(this);
 	}
 }
 
-void DirtyReceiver::SetDirtySender(DirtySender* sender)
+bool DirtyReceiver::GetIsDirty(bool clearDirty)
 {
-	if (this->mSender != nullptr)
-	{
-		this->mSender->RemoveDirtyReceiver(this);
-	}
-
-	this->mSender = sender;
-	
-	if (this->mSender != nullptr)
-	{
-		this->mSender->AddDirtyReceiver(this);
-	}
-}
-
-void DirtyReceiver::SetDirty()
-{
-	this->mMainIsDirty = true;
-	for (auto& localDirty : this->mLocalIsDirtys)
-	{
-		localDirty->bmIsDirty = true;
-	}
-}
-
-void DirtyReceiver::AddLocalIsDirtyVariable(LocalDirty* localIsDirty)
-{
-	assert(this->mSender != nullptr);
-	assert(localIsDirty != nullptr);
-	assert(localIsDirty->mOwnerDirtyReceiver == nullptr);
-
-	localIsDirty->mOwnerDirtyReceiver = this;
-	this->mLocalIsDirtys.push_back(localIsDirty);
-}
-
-void DirtyReceiver::RemoveLocalIsDirtyVariable(LocalDirty* localIsDirty)
-{
-	assert(this->mSender != nullptr);
-	assert(localIsDirty != nullptr);
-
-	localIsDirty->mOwnerDirtyReceiver = nullptr;
-	std::vector<LocalDirty*>::iterator targetIter = std::find(this->mLocalIsDirtys.begin(), this->mLocalIsDirtys.end(), localIsDirty);
-	std::vector_swap_erase(this->mLocalIsDirtys, targetIter);
-
-	
-}
-
-void DirtyReceiver::CleanDirty(bool clearLocalIsDirty)
-{
-	assert(this->mSender != nullptr);
-
-	this->mMainIsDirty = false;
-	
-	if (clearLocalIsDirty == true)
-	{
-		for (auto& localDirty : this->mLocalIsDirtys)
-		{
-			localDirty->bmIsDirty = false;
-		}
-	}
-}
-
-bool DirtyReceiver::GetIsDirtyMain(bool clearDirty)
-{
-	assert(this->mSender != nullptr);
-
-	bool currentDirtyVariable = this->mMainIsDirty;
-
 	if (clearDirty == true)
 	{
-		this->CleanDirty(false);
+		bool currentDirtyVariable = this->bmIsDirty;
+		this->bmIsDirty = false;
+		return currentDirtyVariable;
 	}
-
-	return currentDirtyVariable;
+	else
+	{
+		return this->bmIsDirty;
+	}
 }

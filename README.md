@@ -3,31 +3,40 @@
 ## HOW WORKS?
 
 ```
-          Sender      Receiver   
-        (Only One)   (Multiple)   
-Frame 1     X            X   
+          Sender               Receiver1                Receiver2     
+        (Only One)     
+Frame 1     X                     X                         X
 
-Frame 2     O            O ( Receive Dirty )   
+Frame 2     O ( Notify Dirty )    O ( Receive Dirty )       O ( Receive Dirty ) 
 
-Frame 3     X            O ( Not Reset )   
+Frame 3     X                     O ( Not Reset )           O
 
-Frame 4     X            O   
+Frame 4     X                     X ( Reset Dirty )         O
 
-Frame 5     X            X ( Reset Dirty )   
+Frame 5     X                     X                         O
 ```
 
-
-Put DirtySender at Sender Class, Put DirtyReceiver at Receiver Class.     
+Pass DirtyReceiver pointer through DirtySender::AddDirtyReceiver
 You can add multiple receiver to DirtySender ( Use DirtyReceiver::SetDirtySender )      
-You don't need remove receiver from DirtySender's receiver List when Receiver class is destructed.     
+You don't need remove receiver from DirtySender's receiver List when Receiver class is destructed. ( RAII )     
 
 Each Receivers will receive dirty value from Sender ( Only One ).       
-And Reveivers will maintain dirty value until they reset dirty themself       
-You can receiver dirty value to your own LocalDirty variable ( use AddLocalIsDirtyVariable )     
+And Reveivers will maintain dirty value until they reset their dirty themself       
 
-I don't recommend MainIsDirtyVariable. use your own dirty variable and add it to Receiver object.   
+WARNING : This is not thread-safe. You should implement it yourself.
 
-Why use LocalDirty Class???    
-if support plain bool Local Dirty Variable, Programmers can foget to reset dirty variable    
-So I force programmers to get Dirty value only through GetIsDirtyMain(bool clearDirty)
+## EXAMPLE
 
+```c++
+DirtySender mDirtySender{};
+
+DirtyReceiver mDirtyReceiver{};
+mDirtySender.AddDirtyReceiver(&mDirtyReceiver); // Register DirtyReceiver to DirtySender
+         
+mDirtySender.NotifyDirty(); // DirtySender notify dirty true to Receivers(Local Dirtys)
+ 
+if(mDirtyReceiver.GetIsDirty(true)) // Local Dirty Check if dirty is true, if it's dirty true then Reset it's dirty variable false And return true
+{//if dirty is true
+          ~~
+}
+```
